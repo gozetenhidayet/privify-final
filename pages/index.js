@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Stripe test key (gerçekte 'pk_live_...' ile değiştir)
-const stripePromise = loadStripe('pk_test_...');
+const stripePromise = loadStripe('pk_test_...'); // Test key, sonra live ile değiştir
 
 const products = [
   { id: 1, name: 'Wireless Mouse', price: 19.99, image: '/images/mouse.jpg' },
@@ -45,7 +44,6 @@ export default function Home() {
         Compare product prices across platforms like Amazon, eBay, Walmart & more.
       </p>
 
-      {/* Butonlar */}
       <div className="flex flex-wrap gap-3 mb-4">
         <button
           onClick={() => handleCheckout('price_1RakXdHQV8Xgme4YaaUZaayL')}
@@ -61,7 +59,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Arama Kutusu */}
       <input
         type="text"
         placeholder="Search products..."
@@ -69,7 +66,6 @@ export default function Home() {
         onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
       />
 
-      {/* Sıralama ve Fiyat Filtre */}
       <div className="flex flex-wrap gap-3 mb-6">
         <select
           onChange={(e) => setSort(e.target.value)}
@@ -89,7 +85,6 @@ export default function Home() {
         </select>
       </div>
 
-      {/* Ürün Grid */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
         {displayed.map((p) => (
           <div key={p.id} className="border rounded shadow-sm p-4 relative">
