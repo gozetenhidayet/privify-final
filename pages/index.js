@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe('pk_test_...'); // Stripe test key geçici
+// Stripe test key (gerçekte 'pk_live_...' ile değiştir)
+const stripePromise = loadStripe('pk_test_...');
 
 const products = [
   { id: 1, name: 'Wireless Mouse', price: 19.99, image: '/images/mouse.jpg' },
@@ -13,9 +14,12 @@ export default function Home() {
   const [liked, setLiked] = useState([]);
   const [sort, setSort] = useState('asc');
   const [maxPrice, setMaxPrice] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLike = (id) => {
-    setLiked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setLiked((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
   const handleCheckout = async (priceId) => {
@@ -31,14 +35,18 @@ export default function Home() {
 
   const displayed = [...products]
     .filter((p) => (maxPrice ? p.price <= maxPrice : true))
+    .filter((p) => p.name.toLowerCase().includes(searchQuery))
     .sort((a, b) => (sort === 'asc' ? a.price - b.price : b.price - a.price));
 
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">Welcome to Pricify Live</h1>
-      <p className="text-gray-600 mb-6">Compare product prices across platforms like Amazon, eBay, Walmart & more.</p>
+      <p className="text-gray-600 mb-6">
+        Compare product prices across platforms like Amazon, eBay, Walmart & more.
+      </p>
 
-      <div className="flex flex-wrap gap-3 mb-6">
+      {/* Butonlar */}
+      <div className="flex flex-wrap gap-3 mb-4">
         <button
           onClick={() => handleCheckout('price_1RakXdHQV8Xgme4YaaUZaayL')}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -51,6 +59,18 @@ export default function Home() {
         >
           Subscribe Yearly
         </button>
+      </div>
+
+      {/* Arama Kutusu */}
+      <input
+        type="text"
+        placeholder="Search products..."
+        className="border px-3 py-2 rounded w-full mb-4"
+        onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+      />
+
+      {/* Sıralama ve Fiyat Filtre */}
+      <div className="flex flex-wrap gap-3 mb-6">
         <select
           onChange={(e) => setSort(e.target.value)}
           className="border px-3 py-2 rounded"
@@ -58,6 +78,7 @@ export default function Home() {
           <option value="asc">Sort: Low to High</option>
           <option value="desc">Sort: High to Low</option>
         </select>
+
         <select
           onChange={(e) => setMaxPrice(parseFloat(e.target.value) || null)}
           className="border px-3 py-2 rounded"
@@ -68,6 +89,7 @@ export default function Home() {
         </select>
       </div>
 
+      {/* Ürün Grid */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
         {displayed.map((p) => (
           <div key={p.id} className="border rounded shadow-sm p-4 relative">
