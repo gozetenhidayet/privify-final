@@ -1,107 +1,84 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 
-const stripePromise = loadStripe('pk_test_51RakUzHQV8Xgme4YaXt88...SeninPublicKey');
+const stripePromise = loadStripe('pk_test_...'); // Stripe test key geçici
 
 const products = [
-  {
-    id: 1,
-    name: 'Product A',
-    price: 29.99,
-    image: '/images/product-a.jpg',
-  },
-  {
-    id: 2,
-    name: 'Product B',
-    price: 19.99,
-    image: '/images/product-b.jpg',
-  },
-  {
-    id: 3,
-    name: 'Product C',
-    price: 39.99,
-    image: '/images/product-c.jpg',
-  },
+  { id: 1, name: 'Wireless Mouse', price: 19.99, image: '/images/mouse.jpg' },
+  { id: 2, name: 'Bluetooth Headphones', price: 39.99, image: '/images/headphones.jpg' },
+  { id: 3, name: 'USB-C Hub', price: 29.99, image: '/images/hub.jpg' },
 ];
 
 export default function Home() {
-  const [likedProducts, setLikedProducts] = useState([]);
-  const [sortOrder, setSortOrder] = useState('asc');
-  const [filterPrice, setFilterPrice] = useState(null);
+  const [liked, setLiked] = useState([]);
+  const [sort, setSort] = useState('asc');
+  const [maxPrice, setMaxPrice] = useState(null);
 
-  const toggleLike = (id) => {
-    setLikedProducts((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
-    );
+  const handleLike = (id) => {
+    setLiked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const handleCheckout = async (priceId) => {
     const stripe = await stripePromise;
-    const response = await fetch('/api/create-checkout-session', {
+    const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ priceId }),
     });
-    const session = await response.json();
+    const session = await res.json();
     await stripe.redirectToCheckout({ sessionId: session.id });
   };
 
-  const sortedProducts = [...products]
-    .filter((p) => (filterPrice ? p.price <= filterPrice : true))
-    .sort((a, b) => (sortOrder === 'asc' ? a.price - b.price : b.price - a.price));
+  const displayed = [...products]
+    .filter((p) => (maxPrice ? p.price <= maxPrice : true))
+    .sort((a, b) => (sort === 'asc' ? a.price - b.price : b.price - a.price));
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Welcome to Pricify Live</h1>
+    <div className="p-4 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold mb-2">Welcome to Pricify Live</h1>
+      <p className="text-gray-600 mb-6">Compare product prices across platforms like Amazon, eBay, Walmart & more.</p>
 
-      {/* Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={() => handleCheckout('price_1RakXdHQV8Xgme4YaaUZaayL')}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Subscribe Monthly
         </button>
         <button
           onClick={() => handleCheckout('price_1RakjYHQV8Xgme4YjYOLe78r')}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           Subscribe Yearly
         </button>
-      </div>
-
-      {/* Filter & Sort */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <select
-          className="border p-2 rounded"
-          onChange={(e) => setSortOrder(e.target.value)}
+          onChange={(e) => setSort(e.target.value)}
+          className="border px-3 py-2 rounded"
         >
           <option value="asc">Sort: Low to High</option>
           <option value="desc">Sort: High to Low</option>
         </select>
         <select
-          className="border p-2 rounded"
-          onChange={(e) => setFilterPrice(parseFloat(e.target.value) || null)}
+          onChange={(e) => setMaxPrice(parseFloat(e.target.value) || null)}
+          className="border px-3 py-2 rounded"
         >
-          <option value="">Filter by Price</option>
-          <option value="20">Under $20</option>
+          <option value="">All Prices</option>
           <option value="30">Under $30</option>
-          <option value="40">Under $40</option>
+          <option value="50">Under $50</option>
         </select>
       </div>
 
-      {/* Product Grid */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {sortedProducts.map((product) => (
-          <div key={product.id} className="border rounded p-4 shadow relative">
-            <img src={product.image} alt={product.name} className="w-full h-40 object-cover mb-2" />
-            <h2 className="text-lg font-semibold">{product.name}</h2>
-            <p className="text-gray-700">${product.price.toFixed(2)}</p>
+        {displayed.map((p) => (
+          <div key={p.id} className="border rounded shadow-sm p-4 relative">
+            <img src={p.image} alt={p.name} className="w-full h-36 object-cover mb-2" />
+            <h2 className="font-semibold">{p.name}</h2>
+            <p>${p.price.toFixed(2)}</p>
             <button
-              onClick={() => toggleLike(product.id)}
-              className="absolute top-2 right-2 text-red-500 text-xl"
+              onClick={() => handleLike(p.id)}
+              className="absolute top-2 right-2 text-xl"
             >
-              {likedProducts.includes(product.id) ? '❤️' : '🤍'}
+              {liked.includes(p.id) ? '❤️' : '🤍'}
             </button>
           </div>
         ))}
