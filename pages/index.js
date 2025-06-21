@@ -17,8 +17,10 @@ export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState(null);
+  const [isClient, setIsClient] = useState(false); // ✅ hydration çözümü için
 
   useEffect(() => {
+    setIsClient(true); // ✅ sadece tarayıcıda çalışır
     setFavorites(getFavorites());
   }, []);
 
@@ -84,7 +86,7 @@ export default function Home() {
               <h3>{product.name}</h3>
               <p>${product.price}</p>
               <button onClick={() => toggleFavorite(product)}>
-                {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
+                {isClient && isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
               </button>
             </div>
           ))}
@@ -92,4 +94,3 @@ export default function Home() {
     </div>
   );
 }
-// guncellendi
