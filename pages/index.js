@@ -1,105 +1,72 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe('pk_test_...'); // Test key, sonra live ile değiştir
+import { useState, useEffect } from "react";
+import {
+  getFavorites,
+  saveFavorite,
+  removeFavorite,
+  isFavorite,
+} from "../utils/localStorage";
 
 const products = [
-  { id: 1, name: 'Wireless Mouse', price: 19.99, image: '/images/mouse.jpg' },
-  { id: 2, name: 'Bluetooth Headphones', price: 39.99, image: '/images/headphones.jpg' },
-  { id: 3, name: 'USB-C Hub', price: 29.99, image: '/images/hub.jpg' },
+  {
+    id: 1,
+    name: "Wireless Mouse",
+    price: 19.99,
+    image: "/mouse.jpg",
+  },
+  {
+    id: 2,
+    name: "Bluetooth Headphones",
+    price: 39.99,
+    image: "/hub.jpg",
+  },
+  {
+    id: 3,
+    name: "Keyboard",
+    price: 29.99,
+    image: "/images/keyboard.jpg",
+  },
 ];
 
-export default function Home() {
-  const [liked, setLiked] = useState([]);
-  const [sort, setSort] = useState('asc');
-  const [maxPrice, setMaxPrice] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+export default function HomePage() {
+  const [liked, setLiked] = useState({});
 
-  const handleLike = (id) => {
-    setLiked((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleCheckout = async (priceId) => {
-    const stripe = await stripePromise;
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceId }),
+  useEffect(() => {
+    const initial = {};
+    products.forEach((p) => {
+      initial[p.id] = isFavorite(p.id);
     });
-    const session = await res.json();
-    await stripe.redirectToCheckout({ sessionId: session.id });
-  };
+    setLiked(initial);
+  }, []);
 
-  const displayed = [...products]
-    .filter((p) => (maxPrice ? p.price <= maxPrice : true))
-    .filter((p) => p.name.toLowerCase().includes(searchQuery))
-    .sort((a, b) => (sort === 'asc' ? a.price - b.price : b.price - a.price));
+  const toggleFavorite = (product) => {
+    const updated = { ...liked };
+    if (liked[product.id]) {
+      removeFavorite(product.id);
+      updated[product.id] = false;
+    } else {
+      saveFavorite(product);
+      updated[product.id] = true;
+    }
+    setLiked(updated);
+  };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">Welcome to Pricify Live</h1>
-      <p className="text-gray-600 mb-6">
-        Compare product prices across platforms like Amazon, eBay, Walmart & more.
-      </p>
-
-      <div className="flex flex-wrap gap-3 mb-4">
-        <button
-          onClick={() => handleCheckout('price_1RakXdHQV8Xgme4YaaUZaayL')}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Subscribe Monthly
-        </button>
-        <button
-          onClick={() => handleCheckout('price_1RakjYHQV8Xgme4YjYOLe78r')}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Subscribe Yearly
-        </button>
-      </div>
-
-      <input
-        type="text"
-        placeholder="Search products..."
-        className="border px-3 py-2 rounded w-full mb-4"
-        onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
-      />
-
-      <div className="flex flex-wrap gap-3 mb-6">
-        <select
-          onChange={(e) => setSort(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="asc">Sort: Low to High</option>
-          <option value="desc">Sort: High to Low</option>
-        </select>
-
-        <select
-          onChange={(e) => setMaxPrice(parseFloat(e.target.value) || null)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="">All Prices</option>
-          <option value="30">Under $30</option>
-          <option value="50">Under $50</option>
-        </select>
-      </div>
-
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {displayed.map((p) => (
-          <div key={p.id} className="border rounded shadow-sm p-4 relative">
-            <img src={p.image} alt={p.name} className="w-full h-36 object-cover mb-2" />
-            <h2 className="font-semibold">{p.name}</h2>
-            <p>${p.price.toFixed(2)}</p>
-            <button
-              onClick={() => handleLike(p.id)}
-              className="absolute top-2 right-2 text-xl"
-            >
-              {liked.includes(p.id) ? '❤️' : '🤍'}
-            </button>
-          </div>
-        ))}
-      </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">All Products</h1>
+      {products.map((product) => (
+        <div key={product.id} className="border p-4 mb-6 rounded shadow">
+          <button onClick={() => toggleFavorite(product)} className="text-2xl mb-2">
+            {liked[product.id] ? "❤️" : "🤍"}
+          </button>
+          <img
+            src={product.image}
+            className="w-full h-48 object-cover rounded mb-2"
+            alt={product.name}
+          />
+          <h2 className="font-semibold text-lg">{product.name}</h2>
+          <p>${product.price.toFixed(2)}</p>
+        </div>
+      ))}
     </div>
   );
 }
