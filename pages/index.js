@@ -5,101 +5,54 @@ import {
   removeFavorite,
   isFavorite,
 } from "../utils/localStorage";
+import Link from "next/link";
 
 const products = [
-  {
-    id: 1,
-    name: "Wireless Mouse",
-    price: 19.99,
-    image: "/mouse.jpg",
-  },
-  {
-    id: 2,
-    name: "Bluetooth Headphones",
-    price: 39.99,
-    image: "/hub.jpg",
-  },
-  {
-    id: 3,
-    name: "Keyboard",
-    price: 29.99,
-    image: "/images/keyboard.jpg",
-  },
+  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/mouse.jpg" },
+  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/hub.jpg" },
+  { id: 3, name: "Keyboard", price: 29.99, image: "/images/keyboard.jpg" },
 ];
 
-export default function HomePage() {
-  const [liked, setLiked] = useState({});
-  const [search, setSearch] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+export default function Home() {
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
-    const initial = {};
-    products.forEach((p) => {
-      initial[p.id] = isFavorite(p.id);
-    });
-    setLiked(initial);
+    setFavorites(getFavorites());
   }, []);
 
   const toggleFavorite = (product) => {
-    const updated = { ...liked };
-    if (liked[product.id]) {
+    if (isFavorite(product.id)) {
       removeFavorite(product.id);
-      updated[product.id] = false;
     } else {
       saveFavorite(product);
-      updated[product.id] = true;
     }
-    setLiked(updated);
+    setFavorites(getFavorites());
   };
 
-  const filtered = products.filter((p) => {
-    const matchName = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchPrice = maxPrice === "" || p.price <= parseFloat(maxPrice);
-    return matchName && matchPrice;
-  });
-
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">All Products</h1>
-
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search product name..."
-          className="border p-2 rounded w-full sm:w-1/2"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Max price"
-          className="border p-2 rounded w-full sm:w-1/2"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-        />
-      </div>
-
-      {filtered.map((product) => (
-        <div key={product.id} className="border p-4 mb-6 rounded shadow">
-          <button
-            onClick={() => toggleFavorite(product)}
-            className="text-2xl mb-2"
+    <div style={{ padding: "20px" }}>
+      <h1>All Products</h1>
+      <Link href="/favorites">Go to Favorites ❤️</Link>
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
+        {products.map((product) => (
+          <div
+            key={product.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "10px",
+              width: "200px",
+              textAlign: "center",
+            }}
           >
-            {liked[product.id] ? "❤️" : "🤍"}
-          </button>
-          <img
-            src={product.image}
-            className="w-full h-48 object-cover rounded mb-2"
-            alt={product.name}
-          />
-          <h2 className="font-semibold text-lg">{product.name}</h2>
-          <p>${product.price.toFixed(2)}</p>
-        </div>
-      ))}
-
-      {filtered.length === 0 && (
-        <p className="text-gray-500 mt-6">No products found.</p>
-      )}
+            <img src={product.image} alt={product.name} width="100" />
+            <h3>{product.name}</h3>
+            <p>${product.price}</p>
+            <button onClick={() => toggleFavorite(product)}>
+              {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
