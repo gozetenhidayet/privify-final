@@ -16,6 +16,7 @@ const products = [
 export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState(null);
 
   useEffect(() => {
     setFavorites(getFavorites());
@@ -42,7 +43,7 @@ export default function Home() {
         onChange={(e) => setSearchTerm(e.target.value)}
         style={{
           marginTop: "15px",
-          marginBottom: "20px",
+          marginBottom: "10px",
           padding: "8px",
           width: "300px",
           fontSize: "16px",
@@ -50,11 +51,25 @@ export default function Home() {
         }}
       />
 
+      <div style={{ marginBottom: "20px" }}>
+        <button onClick={() => setSortOrder("asc")} style={{ marginRight: "10px" }}>
+          Fiyat: Artan ⬆️
+        </button>
+        <button onClick={() => setSortOrder("desc")}>
+          Fiyat: Azalan ⬇️
+        </button>
+      </div>
+
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
         {products
           .filter((product) =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase())
           )
+          .sort((a, b) => {
+            if (sortOrder === "asc") return a.price - b.price;
+            if (sortOrder === "desc") return b.price - a.price;
+            return 0;
+          })
           .map((product) => (
             <div
               key={product.id}
