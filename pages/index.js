@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
-import { getFavorites, saveFavorite, removeFavorite, isFavorite } from "../utils/localStorage";
+import {
+  getFavorites,
+  saveFavorite,
+  removeFavorite,
+  isFavorite,
+} from "../utils/localStorage";
 import { calculateScore } from "../utils/score";
-import { getComments, addComment, deleteComment, updateComment } from "../utils/comments";
+import {
+  getComments,
+  addComment,
+  deleteComment,
+  updateComment,
+} from "../utils/comments";
 import { getRecommended } from "../utils/recommend";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
@@ -13,7 +23,8 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [22, 21, 20, 19.99],
+    history: [24.99, 22.99, 21.99, 19.99],
+    variants: ["Black", "White", "Blue"],
   },
   {
     id: 2,
@@ -22,6 +33,7 @@ const products = [
     price: 39.99,
     image: "/images/laptop.png",
     history: [45, 43, 42, 39.99],
+    variants: ["13 inch", "15 inch", "17 inch"],
   },
   {
     id: 3,
@@ -30,6 +42,7 @@ const products = [
     price: 29.99,
     image: "/images/keyboard.jpg",
     history: [34, 32, 30, 29.99],
+    variants: ["Standard", "Mechanical", "RGB"],
   },
 ];
 
@@ -42,6 +55,7 @@ export default function Home() {
   const [comments, setComments] = useState({});
   const [newComment, setNewComment] = useState({});
   const [editing, setEditing] = useState({});
+  const [selectedVariants, setSelectedVariants] = useState({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -55,10 +69,12 @@ export default function Home() {
   }, []);
 
   const toggleFavorite = (product) => {
+    const variant = selectedVariants[product.id] || product.variants?.[0];
+    const productWithVariant = { ...product, variant };
     if (isFavorite(product.id)) {
       removeFavorite(product.id);
     } else {
-      saveFavorite(product);
+      saveFavorite(productWithVariant);
     }
     setFavorites(getFavorites());
   };
@@ -135,6 +151,8 @@ export default function Home() {
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
         {filteredProducts.map((product) => {
           const recommended = getRecommended(product, products);
+          const currentVariant = selectedVariants[product.id] || product.variants?.[0];
+
           return (
             <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "250px", textAlign: "center" }}>
               <img src={product.image} alt={product.name} width="100" />
@@ -142,6 +160,21 @@ export default function Home() {
               <p>${product.price}</p>
               <p>⭐ Score: {calculateScore(product.price)}</p>
               {isClient && <PriceChart history={product.history} />}
+
+              {/* 🔄 Varyant Seçici */}
+              {product.variants && (
+                <select
+                  value={currentVariant}
+                  onChange={(e) =>
+                    setSelectedVariants({ ...selectedVariants, [product.id]: e.target.value })
+                  }
+                  style={{ marginTop: "8px" }}
+                >
+                  {product.variants.map((v, i) => (
+                    <option key={i} value={v}>{v}</option>
+                  ))}
+                </select>
+              )}
 
               {/* 🔔 Alarm */}
               <input
@@ -184,16 +217,10 @@ export default function Home() {
                   {comments[product.id]?.map((c, i) => (
                     <div key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
                       💬 {c}
-                      <button
-                        onClick={() => handleEditComment(product.id, i)}
-                        style={{ marginLeft: "5px" }}
-                      >
+                      <button onClick={() => handleEditComment(product.id, i)} style={{ marginLeft: "5px" }}>
                         ✏️
                       </button>
-                      <button
-                        onClick={() => handleDeleteComment(product.id, i)}
-                        style={{ marginLeft: "5px" }}
-                      >
+                      <button onClick={() => handleDeleteComment(product.id, i)} style={{ marginLeft: "5px" }}>
                         🗑
                       </button>
                     </div>
