@@ -15,6 +15,7 @@ const products = [
 
 export default function Home() {
   const [favorites, setFavorites] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setFavorites(getFavorites());
@@ -33,25 +34,45 @@ export default function Home() {
     <div style={{ padding: "20px" }}>
       <h1>All Products</h1>
       <Link href="/favorites">Go to Favorites ❤️</Link>
-      <div style={{ display: "flex", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
-        {products.map((product) => (
-          <div
-            key={product.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              width: "200px",
-              textAlign: "center",
-            }}
-          >
-            <img src={product.image} alt={product.name} width="100" />
-            <h3>{product.name}</h3>
-            <p>${product.price}</p>
-            <button onClick={() => toggleFavorite(product)}>
-              {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
-            </button>
-          </div>
-        ))}
+
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{
+          marginTop: "15px",
+          marginBottom: "20px",
+          padding: "8px",
+          width: "300px",
+          fontSize: "16px",
+          display: "block",
+        }}
+      />
+
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        {products
+          .filter((product) =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+          .map((product) => (
+            <div
+              key={product.id}
+              style={{
+                border: "1px solid #ccc",
+                padding: "10px",
+                width: "200px",
+                textAlign: "center",
+              }}
+            >
+              <img src={product.image} alt={product.name} width="100" />
+              <h3>{product.name}</h3>
+              <p>${product.price}</p>
+              <button onClick={() => toggleFavorite(product)}>
+                {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
+              </button>
+            </div>
+          ))}
       </div>
     </div>
   );
