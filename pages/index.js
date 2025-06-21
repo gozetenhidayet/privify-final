@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { getFavorites, saveFavorite, removeFavorite, isFavorite } from "../utils/localStorage";
+import {
+  getFavorites,
+  saveFavorite,
+  removeFavorite,
+  isFavorite,
+} from "../utils/localStorage";
 import { calculateScore } from "../utils/score";
 import { getComments, addComment } from "../utils/comments";
+import { getRecommended } from "../utils/recommend";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
 
@@ -12,7 +18,7 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [22.99, 21.99, 20.99, 19.99],
+    history: [24.99, 22.99, 21.99, 19.99],
   },
   {
     id: 2,
@@ -20,7 +26,7 @@ const products = [
     category: "Laptop",
     price: 39.99,
     image: "/images/laptop.png",
-    history: [45, 42, 41, 39.99],
+    history: [45, 43, 41, 39.99],
   },
   {
     id: 3,
@@ -45,7 +51,6 @@ export default function Home() {
   useEffect(() => {
     setFavorites(getFavorites());
     setIsClient(true);
-    // yorumları yükle
     const loaded = {};
     products.forEach((p) => {
       loaded[p.id] = getComments(p.id);
@@ -111,59 +116,68 @@ export default function Home() {
       </div>
 
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
-        {filteredProducts.map((product) => (
-          <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "250px", textAlign: "center" }}>
-            <img src={product.image} alt={product.name} width="100" />
-            <h3>{product.name}</h3>
-            <p>${product.price}</p>
-            <p>⭐ Score: {calculateScore(product.price)}</p>
-            {isClient && <PriceChart history={product.history} />}
+        {filteredProducts.map((product) => {
+          const recommended = getRecommended(product, products);
+          return (
+            <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "250px", textAlign: "center" }}>
+              <img src={product.image} alt={product.name} width="100" />
+              <h3>{product.name}</h3>
+              <p>${product.price}</p>
+              <p>⭐ Score: {calculateScore(product.price)}</p>
+              {isClient && <PriceChart history={product.history} />}
 
-            {/* 🔔 Fiyat Alarmı */}
-            <input
-              type="number"
-              placeholder="Alert below $"
-              value={alerts[product.id] || ""}
-              onChange={(e) =>
-                setAlerts({ ...alerts, [product.id]: e.target.value })
-              }
-              style={{ marginTop: "8px", width: "90%", padding: "5px" }}
-            />
-            {alerts[product.id] && product.price < Number(alerts[product.id]) && (
-              <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>
-                🚨 Price dropped below your alert!
-              </p>
-            )}
-
-            {/* 💬 Yorum Alanı */}
-            <div style={{ marginTop: "10px" }}>
+              {/* 🔔 Fiyat Alarmı */}
               <input
-                type="text"
-                placeholder="Write a comment..."
-                value={newComment[product.id] || ""}
+                type="number"
+                placeholder="Alert below $"
+                value={alerts[product.id] || ""}
                 onChange={(e) =>
-                  setNewComment({ ...newComment, [product.id]: e.target.value })
+                  setAlerts({ ...alerts, [product.id]: e.target.value })
                 }
-                style={{ width: "90%", padding: "5px" }}
+                style={{ marginTop: "8px", width: "90%", padding: "5px" }}
               />
-              <button onClick={() => handleAddComment(product.id)} style={{ marginTop: "5px" }}>
-                ➕ Add Comment
-              </button>
+              {alerts[product.id] && product.price < Number(alerts[product.id]) && (
+                <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>
+                  🚨 Price dropped below your alert!
+                </p>
+              )}
 
-              <div style={{ marginTop: "10px", textAlign: "left" }}>
-                {comments[product.id]?.map((c, i) => (
-                  <p key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
-                    💬 {c}
-                  </p>
-                ))}
+              {/* 💬 Yorum Alanı */}
+              <div style={{ marginTop: "10px" }}>
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  value={newComment[product.id] || ""}
+                  onChange={(e) =>
+                    setNewComment({ ...newComment, [product.id]: e.target.value })
+                  }
+                  style={{ width: "90%", padding: "5px" }}
+                />
+                <button onClick={() => handleAddComment(product.id)} style={{ marginTop: "5px" }}>
+                  ➕ Add Comment
+                </button>
+                <div style={{ marginTop: "10px", textAlign: "left" }}>
+                  {comments[product.id]?.map((c, i) => (
+                    <p key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
+                      💬 {c}
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <button onClick={() => toggleFavorite(product)} style={{ marginTop: "10px" }}>
-              {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
-            </button>
-          </div>
-        ))}
+              {/* 🤖 Önerilen Ürün */}
+              {isClient && recommended && (
+                <div style={{ marginTop: "10px", fontSize: "13px", backgroundColor: "#f0f0f0", padding: "5px" }}>
+                  🔁 Recommended: <strong>{recommended.name}</strong>
+                </div>
+              )}
+
+              <button onClick={() => toggleFavorite(product)} style={{ marginTop: "10px" }}>
+                {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
