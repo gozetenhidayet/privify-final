@@ -16,7 +16,7 @@ const products = [
 export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState(null); // "asc" veya "desc"
+  const [sortOrder, setSortOrder] = useState(null);
 
   useEffect(() => {
     setFavorites(getFavorites());
