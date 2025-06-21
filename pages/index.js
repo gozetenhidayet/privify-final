@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getFavorites, saveFavorite, removeFavorite, isFavorite } from "../utils/localStorage";
 import { calculateScore } from "../utils/score";
+import { getComments, addComment } from "../utils/comments";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
 
@@ -11,7 +12,7 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [24, 22, 21, 19.99],
+    history: [22.99, 21.99, 20.99, 19.99],
   },
   {
     id: 2,
@@ -37,11 +38,19 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [alerts, setAlerts] = useState({});
+  const [comments, setComments] = useState({});
+  const [newComment, setNewComment] = useState({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setFavorites(getFavorites());
     setIsClient(true);
+    // yorumları yükle
+    const loaded = {};
+    products.forEach((p) => {
+      loaded[p.id] = getComments(p.id);
+    });
+    setComments(loaded);
   }, []);
 
   const toggleFavorite = (product) => {
@@ -53,7 +62,15 @@ export default function Home() {
     setFavorites(getFavorites());
   };
 
-  const filtered = products
+  const handleAddComment = (id) => {
+    if (newComment[id]) {
+      addComment(id, newComment[id]);
+      setComments({ ...comments, [id]: [...(comments[id] || []), newComment[id]] });
+      setNewComment({ ...newComment, [id]: "" });
+    }
+  };
+
+  const filteredProducts = products
     .filter(
       (product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -94,7 +111,7 @@ export default function Home() {
       </div>
 
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
-        {filtered.map((product) => (
+        {filteredProducts.map((product) => (
           <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "250px", textAlign: "center" }}>
             <img src={product.image} alt={product.name} width="100" />
             <h3>{product.name}</h3>
@@ -102,7 +119,7 @@ export default function Home() {
             <p>⭐ Score: {calculateScore(product.price)}</p>
             {isClient && <PriceChart history={product.history} />}
 
-            {/* 🔔 Fiyat Alarmı Girişi */}
+            {/* 🔔 Fiyat Alarmı */}
             <input
               type="number"
               placeholder="Alert below $"
@@ -117,6 +134,30 @@ export default function Home() {
                 🚨 Price dropped below your alert!
               </p>
             )}
+
+            {/* 💬 Yorum Alanı */}
+            <div style={{ marginTop: "10px" }}>
+              <input
+                type="text"
+                placeholder="Write a comment..."
+                value={newComment[product.id] || ""}
+                onChange={(e) =>
+                  setNewComment({ ...newComment, [product.id]: e.target.value })
+                }
+                style={{ width: "90%", padding: "5px" }}
+              />
+              <button onClick={() => handleAddComment(product.id)} style={{ marginTop: "5px" }}>
+                ➕ Add Comment
+              </button>
+
+              <div style={{ marginTop: "10px", textAlign: "left" }}>
+                {comments[product.id]?.map((c, i) => (
+                  <p key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
+                    💬 {c}
+                  </p>
+                ))}
+              </div>
+            </div>
 
             <button onClick={() => toggleFavorite(product)} style={{ marginTop: "10px" }}>
               {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
