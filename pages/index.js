@@ -1,3 +1,12 @@
+
+1 of 3
+Gir
+Inbox
+
+Hidayet Gozeten <hynngozeten@gmail.com>
+9:15 PM (0 minutes ago)
+to me
+
 import { useState, useEffect } from "react";
 import {
   getFavorites,
@@ -29,6 +38,8 @@ const products = [
 
 export default function HomePage() {
   const [liked, setLiked] = useState({});
+  const [search, setSearch] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   useEffect(() => {
     const initial = {};
@@ -50,12 +61,39 @@ export default function HomePage() {
     setLiked(updated);
   };
 
+  const filtered = products.filter((p) => {
+    const matchName = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchPrice = maxPrice === "" || p.price <= parseFloat(maxPrice);
+    return matchName && matchPrice;
+  });
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">All Products</h1>
-      {products.map((product) => (
+
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Search product name..."
+          className="border p-2 rounded w-full sm:w-1/2"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Max price"
+          className="border p-2 rounded w-full sm:w-1/2"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(e.target.value)}
+        />
+      </div>
+
+      {filtered.map((product) => (
         <div key={product.id} className="border p-4 mb-6 rounded shadow">
-          <button onClick={() => toggleFavorite(product)} className="text-2xl mb-2">
+          <button
+            onClick={() => toggleFavorite(product)}
+            className="text-2xl mb-2"
+          >
             {liked[product.id] ? "❤️" : "🤍"}
           </button>
           <img
@@ -67,6 +105,10 @@ export default function HomePage() {
           <p>${product.price.toFixed(2)}</p>
         </div>
       ))}
+
+      {filtered.length === 0 && (
+        <p className="text-gray-500 mt-6">No products found.</p>
+      )}
     </div>
   );
 }
