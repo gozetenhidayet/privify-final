@@ -8,8 +8,8 @@ import {
 import Link from "next/link";
 
 const products = [
-  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/mouse.jpg" },
-  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/hub.jpg" },
+  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/images/mouse.jpg" },
+  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/images/hub.jpg" },
   { id: 3, name: "Keyboard", price: 29.99, image: "/images/keyboard.jpg" },
 ];
 
@@ -17,8 +17,10 @@ export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState(null);
+  const [isClient, setIsClient] = useState(false); // ✅ hydration çözümü için
 
   useEffect(() => {
+    setIsClient(true); // ✅ sadece tarayıcıda çalışır
     setFavorites(getFavorites());
   }, []);
 
@@ -84,7 +86,7 @@ export default function Home() {
               <h3>{product.name}</h3>
               <p>${product.price}</p>
               <button onClick={() => toggleFavorite(product)}>
-                {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
+                {isClient && isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
               </button>
             </div>
           ))}
