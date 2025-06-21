@@ -1,3 +1,13 @@
+
+3 of 4
+Yaz
+Inbox
+
+Hidayet Gozeten <hynngozeten@gmail.com>
+1:48 AM (3 minutes ago)
+to me
+
+
 import { useEffect, useState } from "react";
 import { getFavorites, removeFavorite } from "../utils/localStorage";
 import Link from "next/link";
@@ -18,6 +28,7 @@ export default function FavoritesPage() {
     <div style={{ padding: "20px" }}>
       <h1>Your Favorites</h1>
       <Link href="/">&larr; Back to Products</Link>
+
       <div style={{ marginTop: "20px" }}>
         {favorites.length === 0 ? (
           <p>No favorites yet.</p>
