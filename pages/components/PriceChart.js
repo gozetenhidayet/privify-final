@@ -1,5 +1,5 @@
 // components/PriceChart.js
-import React from "react";
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,8 +9,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+} from 'chart.js';
 
 ChartJS.register(
   CategoryScale,
@@ -24,14 +23,13 @@ ChartJS.register(
 
 export default function PriceChart({ history }) {
   const data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Today"],
+    labels: history.map((_, i) => `Day ${i + 1}`),
     datasets: [
       {
-        label: "Price History ($)",
+        label: 'Price History',
         data: history,
+        borderColor: 'rgba(75,192,192,1)',
         fill: false,
-        borderColor: "#3b82f6",
-        tension: 0.1,
       },
     ],
   };
@@ -39,28 +37,10 @@ export default function PriceChart({ history }) {
   const options = {
     responsive: true,
     plugins: {
-      legend: {
-        display: true,
-        position: "top",
-      },
-      title: {
-        display: false,
-      },
+      legend: { position: 'top' },
+      title: { display: true, text: 'Price Trend' },
     },
   };
 
-  return (
-    <div style={{ maxWidth: "300px", margin: "10px auto" }}>
-      <Line data={data} options={options} />
-    </div>
-  );
-}
-
-
-// utils/score.js
-export function calculateScore(price) {
-  if (price <= 0) return 0;
-  const maxPrice = 100;
-  let score = Math.max(0, 100 - (price / maxPrice) * 100);
-  return Math.round(score);
+  return <Line data={data} options={options} />;
 }
