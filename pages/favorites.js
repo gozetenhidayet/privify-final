@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { getFavorites, removeFavorite } from "../utils/localStorage";
 import Link from "next/link";
+import { calculateScore } from "../utils/score";
 import PriceChart from "../components/PriceChart";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setFavorites(getFavorites());
+    setIsClient(true);
   }, []);
 
   const handleRemove = (id) => {
@@ -37,30 +40,29 @@ export default function FavoritesPage() {
   return (
     <div style={{ padding: "20px" }}>
       <h1>Your Favorites</h1>
-      <Link href="/">
-        <a>&larr; Back to Products</a>
-      </Link>
-      <br />
-      <button onClick={downloadCSV} style={{ margin: "10px 0" }}>
+      <Link href="/">← Back to Products</Link>
+      <button onClick={downloadCSV} style={{ marginLeft: "10px" }}>
         📥 Download CSV
       </button>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {favorites.map((item) => (
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+        {favorites.map((product) => (
           <div
-            key={item.id}
+            key={product.id}
             style={{
               border: "1px solid #ccc",
               padding: "10px",
-              margin: "10px",
-              width: "200px",
+              width: "250px",
               textAlign: "center",
             }}
           >
-            <img src={item.image} alt={item.name} width="100" />
-            <h3>{item.name}</h3>
-            <p>${item.price}</p>
-            <button onClick={() => handleRemove(item.id)}>🗑️ Remove</button>
-            <PriceChart product={item} />
+            <img src={product.image} alt={product.name} width="100" />
+            <h3>{product.name}</h3>
+            <p>${product.price}</p>
+            <p>⭐ Score: {calculateScore(product.price)}</p>
+            {isClient && <PriceChart history={product.history} />}
+            <button onClick={() => handleRemove(product.id)}>
+              🗑️ Remove
+            </button>
           </div>
         ))}
       </div>
