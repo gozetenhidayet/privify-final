@@ -23,4 +23,3 @@ export const isFavorite = (productId) => {
   if (typeof window === "undefined") return false;
   return getFavorites().some((item) => item.id === productId);
 };
-// Guncellendi
