@@ -55,3 +55,12 @@ export default function PriceChart({ history }) {
     </div>
   );
 }
+
+
+// utils/score.js
+export function calculateScore(price) {
+  if (price <= 0) return 0;
+  const maxPrice = 100;
+  let score = Math.max(0, 100 - (price / maxPrice) * 100);
+  return Math.round(score);
+}
