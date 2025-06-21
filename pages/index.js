@@ -8,15 +8,15 @@ import {
 import Link from "next/link";
 
 const products = [
-  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/mouse.jpg" },
-  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/hub.jpg" },
+  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/images/mouse.jpg" },
+  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/images/hub.jpg" },
   { id: 3, name: "Keyboard", price: 29.99, image: "/images/keyboard.jpg" },
 ];
 
 export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null); // "asc" veya "desc"
 
   useEffect(() => {
     setFavorites(getFavorites());
