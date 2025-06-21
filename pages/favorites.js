@@ -1,13 +1,3 @@
-
-3 of 4
-Yaz
-Inbox
-
-Hidayet Gozeten <hynngozeten@gmail.com>
-1:48 AM (3 minutes ago)
-to me
-
-
 import { useEffect, useState } from "react";
 import { getFavorites, removeFavorite } from "../utils/localStorage";
 import Link from "next/link";
@@ -24,10 +14,44 @@ export default function FavoritesPage() {
     setFavorites(getFavorites());
   };
 
+  const downloadCSV = () => {
+    const headers = ["Product Name", "Price"];
+    const rows = favorites.map(item => [item.name, `$${item.price}`]);
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
+      + rows.map(row => row.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "favorites.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h1>Your Favorites</h1>
       <Link href="/">&larr; Back to Products</Link>
+
+      {favorites.length > 0 && (
+        <button
+          onClick={downloadCSV}
+          style={{
+            marginTop: "15px",
+            padding: "8px 12px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
+        >
+          📥 Download CSV
+        </button>
+      )}
 
       <div style={{ marginTop: "20px" }}>
         {favorites.length === 0 ? (
