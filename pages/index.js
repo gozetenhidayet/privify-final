@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-  getFavorites,
-  saveFavorite,
-  removeFavorite,
-  isFavorite,
-} from "../utils/localStorage";
+import { getFavorites, saveFavorite, removeFavorite, isFavorite } from "../utils/localStorage";
 import { calculateScore } from "../utils/score";
-import { getComments, addComment } from "../utils/comments";
+import { getComments, addComment, deleteComment, updateComment } from "../utils/comments";
 import { getRecommended } from "../utils/recommend";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
@@ -18,7 +13,7 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [24.99, 22.99, 21.99, 19.99],
+    history: [22, 21, 20, 19.99],
   },
   {
     id: 2,
@@ -26,7 +21,7 @@ const products = [
     category: "Laptop",
     price: 39.99,
     image: "/images/laptop.png",
-    history: [45, 43, 41, 39.99],
+    history: [45, 43, 42, 39.99],
   },
   {
     id: 3,
@@ -46,6 +41,7 @@ export default function Home() {
   const [alerts, setAlerts] = useState({});
   const [comments, setComments] = useState({});
   const [newComment, setNewComment] = useState({});
+  const [editing, setEditing] = useState({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -73,6 +69,27 @@ export default function Home() {
       setComments({ ...comments, [id]: [...(comments[id] || []), newComment[id]] });
       setNewComment({ ...newComment, [id]: "" });
     }
+  };
+
+  const handleDeleteComment = (id, index) => {
+    deleteComment(id, index);
+    const updated = [...comments[id]];
+    updated.splice(index, 1);
+    setComments({ ...comments, [id]: updated });
+  };
+
+  const handleEditComment = (id, index) => {
+    setEditing({ ...editing, [id]: index });
+    setNewComment({ ...newComment, [id]: comments[id][index] });
+  };
+
+  const handleSaveEdit = (id, index) => {
+    updateComment(id, index, newComment[id]);
+    const updated = [...comments[id]];
+    updated[index] = newComment[id];
+    setComments({ ...comments, [id]: updated });
+    setEditing({ ...editing, [id]: null });
+    setNewComment({ ...newComment, [id]: "" });
   };
 
   const filteredProducts = products
@@ -126,7 +143,7 @@ export default function Home() {
               <p>⭐ Score: {calculateScore(product.price)}</p>
               {isClient && <PriceChart history={product.history} />}
 
-              {/* 🔔 Fiyat Alarmı */}
+              {/* 🔔 Alarm */}
               <input
                 type="number"
                 placeholder="Alert below $"
@@ -134,7 +151,7 @@ export default function Home() {
                 onChange={(e) =>
                   setAlerts({ ...alerts, [product.id]: e.target.value })
                 }
-                style={{ marginTop: "8px", width: "90%", padding: "5px" }}
+                style={{ width: "90%", padding: "5px", marginTop: "8px" }}
               />
               {alerts[product.id] && product.price < Number(alerts[product.id]) && (
                 <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>
@@ -142,7 +159,7 @@ export default function Home() {
                 </p>
               )}
 
-              {/* 💬 Yorum Alanı */}
+              {/* 💬 Yorum Sistemi */}
               <div style={{ marginTop: "10px" }}>
                 <input
                   type="text"
@@ -153,14 +170,33 @@ export default function Home() {
                   }
                   style={{ width: "90%", padding: "5px" }}
                 />
-                <button onClick={() => handleAddComment(product.id)} style={{ marginTop: "5px" }}>
-                  ➕ Add Comment
-                </button>
+                {editing[product.id] !== null && editing[product.id] !== undefined ? (
+                  <button onClick={() => handleSaveEdit(product.id, editing[product.id])}>
+                    💾 Save
+                  </button>
+                ) : (
+                  <button onClick={() => handleAddComment(product.id)}>
+                    ➕ Add Comment
+                  </button>
+                )}
+
                 <div style={{ marginTop: "10px", textAlign: "left" }}>
                   {comments[product.id]?.map((c, i) => (
-                    <p key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
+                    <div key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
                       💬 {c}
-                    </p>
+                      <button
+                        onClick={() => handleEditComment(product.id, i)}
+                        style={{ marginLeft: "5px" }}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(product.id, i)}
+                        style={{ marginLeft: "5px" }}
+                      >
+                        🗑
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
