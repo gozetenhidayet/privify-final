@@ -5,13 +5,13 @@ import {
   removeFavorite,
   isFavorite,
 } from "../utils/localStorage";
-import { calculateScore } from "../utils/score";
 import {
   getComments,
   addComment,
   deleteComment,
   updateComment,
 } from "../utils/comments";
+import { calculateScore } from "../utils/score";
 import { getRecommended } from "../utils/recommend";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
@@ -23,8 +23,9 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [24.99, 22.99, 21.99, 19.99],
-    variants: ["Black", "White", "Blue"],
+    history: [24.99, 22.99, 20.99, 19.99],
+    variants: ["Black", "White"],
+    stock: 3,
   },
   {
     id: 2,
@@ -33,7 +34,8 @@ const products = [
     price: 39.99,
     image: "/images/laptop.png",
     history: [45, 43, 42, 39.99],
-    variants: ["13 inch", "15 inch", "17 inch"],
+    variants: ["13 inch", "15 inch"],
+    stock: 2,
   },
   {
     id: 3,
@@ -42,7 +44,8 @@ const products = [
     price: 29.99,
     image: "/images/keyboard.jpg",
     history: [34, 32, 30, 29.99],
-    variants: ["Standard", "Mechanical", "RGB"],
+    variants: ["Standard", "Mechanical"],
+    stock: 1,
   },
 ];
 
@@ -56,26 +59,46 @@ export default function Home() {
   const [newComment, setNewComment] = useState({});
   const [editing, setEditing] = useState({});
   const [selectedVariants, setSelectedVariants] = useState({});
+  const [stockLevels, setStockLevels] = useState({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setFavorites(getFavorites());
     setIsClient(true);
-    const loaded = {};
+
+    const loadedComments = {};
     products.forEach((p) => {
-      loaded[p.id] = getComments(p.id);
+      loadedComments[p.id] = getComments(p.id);
     });
-    setComments(loaded);
+    setComments(loadedComments);
+
+    const stockData = {};
+    products.forEach((p) => {
+      stockData[p.id] = p.stock;
+    });
+    setStockLevels(stockData);
   }, []);
 
   const toggleFavorite = (product) => {
+    if (stockLevels[product.id] <= 0 && !isFavorite(product.id)) return;
+
     const variant = selectedVariants[product.id] || product.variants?.[0];
     const productWithVariant = { ...product, variant };
+
     if (isFavorite(product.id)) {
       removeFavorite(product.id);
+      setStockLevels({
+        ...stockLevels,
+        [product.id]: stockLevels[product.id] + 1,
+      });
     } else {
       saveFavorite(productWithVariant);
+      setStockLevels({
+        ...stockLevels,
+        [product.id]: stockLevels[product.id] - 1,
+      });
     }
+
     setFavorites(getFavorites());
   };
 
@@ -159,9 +182,14 @@ export default function Home() {
               <h3>{product.name}</h3>
               <p>${product.price}</p>
               <p>⭐ Score: {calculateScore(product.price)}</p>
+              <p>📦 Stock: {stockLevels[product.id]}</p>
+              {stockLevels[product.id] <= 0 && (
+                <p style={{ color: "red", fontWeight: "bold" }}>❌ Out of stock</p>
+              )}
+
               {isClient && <PriceChart history={product.history} />}
 
-              {/* 🔄 Varyant Seçici */}
+              {/* 🔄 Varyant */}
               {product.variants && (
                 <select
                   value={currentVariant}
@@ -171,7 +199,9 @@ export default function Home() {
                   style={{ marginTop: "8px" }}
                 >
                   {product.variants.map((v, i) => (
-                    <option key={i} value={v}>{v}</option>
+                    <option key={i} value={v}>
+                      {v}
+                    </option>
                   ))}
                 </select>
               )}
@@ -192,7 +222,7 @@ export default function Home() {
                 </p>
               )}
 
-              {/* 💬 Yorum Sistemi */}
+              {/* 💬 Yorum */}
               <div style={{ marginTop: "10px" }}>
                 <input
                   type="text"
@@ -228,14 +258,19 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 🤖 Önerilen Ürün */}
+              {/* 🤖 Öneri */}
               {isClient && recommended && (
                 <div style={{ marginTop: "10px", fontSize: "13px", backgroundColor: "#f0f0f0", padding: "5px" }}>
                   🔁 Recommended: <strong>{recommended.name}</strong>
                 </div>
               )}
 
-              <button onClick={() => toggleFavorite(product)} style={{ marginTop: "10px" }}>
+              {/* 💖 Favori */}
+              <button
+                onClick={() => toggleFavorite(product)}
+                disabled={stockLevels[product.id] <= 0 && !isFavorite(product.id)}
+                style={{ marginTop: "10px" }}
+              >
                 {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
               </button>
             </div>
