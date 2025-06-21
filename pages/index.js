@@ -1,3 +1,5 @@
+// ✅ pages/index.js – Ürün listeleme + tüm özellikler (favori, grafik, skor, alarm, yorum, varyant, öneri, stok, sepete ekle)
+
 import { useEffect, useState } from "react";
 import {
   getFavorites,
@@ -13,6 +15,7 @@ import {
 } from "../utils/comments";
 import { calculateScore } from "../utils/score";
 import { getRecommended } from "../utils/recommend";
+import { addToCart } from "../utils/cart";
 import PriceChart from "../components/PriceChart";
 import Link from "next/link";
 
@@ -23,7 +26,7 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [24.99, 22.99, 20.99, 19.99],
+    history: [22, 21, 20, 19.99],
     variants: ["Black", "White"],
     stock: 3,
   },
@@ -60,6 +63,7 @@ export default function Home() {
   const [editing, setEditing] = useState({});
   const [selectedVariants, setSelectedVariants] = useState({});
   const [stockLevels, setStockLevels] = useState({});
+  const [message, setMessage] = useState("");
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -67,21 +71,17 @@ export default function Home() {
     setIsClient(true);
 
     const loadedComments = {};
-    products.forEach((p) => {
-      loadedComments[p.id] = getComments(p.id);
-    });
-    setComments(loadedComments);
-
     const stockData = {};
     products.forEach((p) => {
+      loadedComments[p.id] = getComments(p.id);
       stockData[p.id] = p.stock;
     });
+    setComments(loadedComments);
     setStockLevels(stockData);
   }, []);
 
   const toggleFavorite = (product) => {
     if (stockLevels[product.id] <= 0 && !isFavorite(product.id)) return;
-
     const variant = selectedVariants[product.id] || product.variants?.[0];
     const productWithVariant = { ...product, variant };
 
@@ -98,7 +98,6 @@ export default function Home() {
         [product.id]: stockLevels[product.id] - 1,
       });
     }
-
     setFavorites(getFavorites());
   };
 
@@ -143,10 +142,16 @@ export default function Home() {
       return 0;
     });
 
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    setMessage(`${product.name} added to cart!`);
+    setTimeout(() => setMessage(""), 1500);
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h1>All Products</h1>
-      <Link href="/favorites">Go to Favorites ❤️</Link>
+      <Link href="/cart">🛒 View Cart</Link>
       <br /><br />
 
       <input
@@ -165,11 +170,13 @@ export default function Home() {
       </div>
 
       <div style={{ marginTop: "10px" }}>
-        <button onClick={() => setSortOrder("asc")}>⬆️ Fiyat Artan</button>
+        <button onClick={() => setSortOrder("asc")}>⬆️ Price Asc</button>
         <button onClick={() => setSortOrder("desc")} style={{ marginLeft: "10px" }}>
-          ⬇️ Fiyat Azalan
+          ⬇️ Price Desc
         </button>
       </div>
+
+      {message && <p style={{ color: "green" }}>{message}</p>}
 
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
         {filteredProducts.map((product) => {
@@ -183,10 +190,7 @@ export default function Home() {
               <p>${product.price}</p>
               <p>⭐ Score: {calculateScore(product.price)}</p>
               <p>📦 Stock: {stockLevels[product.id]}</p>
-              {stockLevels[product.id] <= 0 && (
-                <p style={{ color: "red", fontWeight: "bold" }}>❌ Out of stock</p>
-              )}
-
+              {stockLevels[product.id] <= 0 && <p style={{ color: "red" }}>❌ Out of stock</p>}
               {isClient && <PriceChart history={product.history} />}
 
               {/* 🔄 Varyant */}
@@ -199,9 +203,7 @@ export default function Home() {
                   style={{ marginTop: "8px" }}
                 >
                   {product.variants.map((v, i) => (
-                    <option key={i} value={v}>
-                      {v}
-                    </option>
+                    <option key={i} value={v}>{v}</option>
                   ))}
                 </select>
               )}
@@ -242,36 +244,38 @@ export default function Home() {
                     ➕ Add Comment
                   </button>
                 )}
-
                 <div style={{ marginTop: "10px", textAlign: "left" }}>
                   {comments[product.id]?.map((c, i) => (
                     <div key={i} style={{ fontSize: "13px", marginBottom: "4px" }}>
                       💬 {c}
-                      <button onClick={() => handleEditComment(product.id, i)} style={{ marginLeft: "5px" }}>
-                        ✏️
-                      </button>
-                      <button onClick={() => handleDeleteComment(product.id, i)} style={{ marginLeft: "5px" }}>
-                        🗑
-                      </button>
+                      <button onClick={() => handleEditComment(product.id, i)} style={{ marginLeft: "5px" }}>✏️</button>
+                      <button onClick={() => handleDeleteComment(product.id, i)} style={{ marginLeft: "5px" }}>🗑</button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* 🤖 Öneri */}
+              {/* 🤖 Önerilen */}
               {isClient && recommended && (
                 <div style={{ marginTop: "10px", fontSize: "13px", backgroundColor: "#f0f0f0", padding: "5px" }}>
                   🔁 Recommended: <strong>{recommended.name}</strong>
                 </div>
               )}
 
-              {/* 💖 Favori */}
               <button
                 onClick={() => toggleFavorite(product)}
                 disabled={stockLevels[product.id] <= 0 && !isFavorite(product.id)}
                 style={{ marginTop: "10px" }}
               >
                 {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
+              </button>
+
+              <button
+                onClick={() => handleAddToCart(product)}
+                disabled={stockLevels[product.id] <= 0}
+                style={{ marginTop: "10px" }}
+              >
+                🛒 Add to Cart
               </button>
             </div>
           );
