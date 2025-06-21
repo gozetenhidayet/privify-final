@@ -1,14 +1,3 @@
-
-1 of 6
-Yaz
-Inbox
-
-Hidayet Gozeten <hynngozeten@gmail.com>
-12:37 AM (3 minutes ago)
-to me
-
-// ✅ 1. FILE: utils/localStorage.js
-
 export const getFavorites = () => {
   if (typeof window === "undefined") return [];
   const favorites = localStorage.getItem("favorites");
