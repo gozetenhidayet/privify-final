@@ -1,44 +1,58 @@
-import { useEffect, useState } from "react";
-import { getFavorites, removeFavorite } from "../utils/localStorage";
+import { useState, useEffect } from "react";
+import {
+  getFavorites,
+  saveFavorite,
+  removeFavorite,
+  isFavorite,
+} from "../utils/localStorage";
+import Link from "next/link";
 
-export default function FavoritesPage() {
+const products = [
+  { id: 1, name: "Wireless Mouse", price: 19.99, image: "/mouse.jpg" },
+  { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/hub.jpg" },
+  { id: 3, name: "Keyboard", price: 29.99, image: "/images/keyboard.jpg" },
+];
+
+export default function Home() {
   const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     setFavorites(getFavorites());
   }, []);
 
-  const handleRemove = (id) => {
-    removeFavorite(id);
-    setFavorites((prev) => prev.filter((item) => item.id !== id));
+  const toggleFavorite = (product) => {
+    if (isFavorite(product.id)) {
+      removeFavorite(product.id);
+    } else {
+      saveFavorite(product);
+    }
+    setFavorites(getFavorites());
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Your Favorites</h1>
-      {favorites.length === 0 ? (
-        <p>No favorite products yet.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {favorites.map((product) => (
-            <div key={product.id} className="border p-4 rounded shadow">
-              <button
-                onClick={() => handleRemove(product.id)}
-                className="text-2xl mb-2"
-              >
-                ❌
-              </button>
-              <img
-                src={product.image}
-                className="w-full h-48 object-cover rounded mb-2"
-                alt={product.name}
-              />
-              <h2 className="font-semibold">{product.name}</h2>
-              <p>${product.price.toFixed(2)}</p>
-            </div>
-          ))}
-        </div>
-      )}
+    <div style={{ padding: "20px" }}>
+      <h1>All Products</h1>
+      <Link href="/favorites">Go to Favorites ❤️</Link>
+      <div style={{ display: "flex", gap: "20px", marginTop: "20px", flexWrap: "wrap" }}>
+        {products.map((product) => (
+          <div
+            key={product.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "10px",
+              width: "200px",
+              textAlign: "center",
+            }}
+          >
+            <img src={product.image} alt={product.name} width="100" />
+            <h3>{product.name}</h3>
+            <p>${product.price}</p>
+            <button onClick={() => toggleFavorite(product)}>
+              {isFavorite(product.id) ? "💖 Remove" : "🤍 Add to Favorites"}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
