@@ -1,38 +1,12 @@
 import { useEffect, useState } from "react";
-import { getFavorites, saveFavorite, removeFavorite, isFavorite } from "../utils/localStorage";
-import { calculateScore } from "../utils/score"; // ⭐ Skor hesaplama fonksiyonu
-import PriceChart from "../components/PriceChart"; // 📈 Fiyat grafiği
 import Link from "next/link";
+import { getFavorites, removeFavorite } from "../utils/localStorage";
+import { calculateScore } from "../utils/score";
+import PriceChart from "../components/PriceChart";
+import jsPDF from "jspdf"; // 📄 PDF oluşturucu
 
-// Ürün verileri (örnek)
-const products = [
-  {
-    id: 1,
-    name: "Wireless Mouse",
-    price: 19.99,
-    image: "/images/wirelessmouse.png",
-    history: [22.99, 21.49, 20.99, 19.99]
-  },
-  {
-    id: 2,
-    name: "Laptop",
-    price: 39.99,
-    image: "/images/laptop.png",
-    history: [45.00, 42.50, 41.00, 39.99]
-  },
-  {
-    id: 3,
-    name: "Keyboard",
-    price: 29.99,
-    image: "/images/keyboard.jpg",
-    history: [34.99, 32.99, 30.00, 29.99]
-  }
-];
-
-export default function Home() {
+export default function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -40,53 +14,76 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
-  const toggleFavorite = (product) => {
-    if (isFavorite(product.id)) {
-      removeFavorite(product.id);
-    } else {
-      saveFavorite(product);
-    }
+  const handleRemove = (id) => {
+    removeFavorite(id);
     setFavorites(getFavorites());
   };
 
-  const filtered = products
-    .filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortOrder === "asc") return a.price - b.price;
-      if (sortOrder === "desc") return b.price - a.price;
-      return 0;
+  const downloadCSV = () => {
+    const headers = ["Product Name", "Price"];
+    const rows = favorites.map(item => [item.name, `$${item.price}`]);
+
+    let csvContent =
+      "data:text/csv;charset=utf-8," +
+      headers.join(",") +
+      "\n" +
+      rows.map(row => row.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "favorites.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Favorite Products", 10, 10);
+
+    let y = 20;
+    favorites.forEach((item, index) => {
+      doc.setFontSize(12);
+      doc.text(`${index + 1}. ${item.name} - $${item.price} - ⭐ ${calculateScore(item.price)}`, 10, y);
+      y += 10;
     });
+
+    doc.save("favorites.pdf");
+  };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>All Products</h1>
-      <Link href="/favorites">Go to Favorites ❤️</Link>
-      <br /><br />
+      <h1>Your Favorites</h1>
+      <Link href="/">← Back to Products</Link>
+      <div style={{ marginTop: "10px", marginBottom: "20px" }}>
+        <button onClick={downloadCSV} style={{ marginRight: "10px" }}>
+          📥 Download CSV
+        </button>
+        <button onClick={downloadPDF}>
+          🖨️ Download PDF
+        </button>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ padding: "6px", width: "250px" }}
-      />
-      <br /><br />
-
-      <button onClick={() => setSortOrder("asc")}>⬆️ Fiyat Artan</button>
-      <button onClick={() => setSortOrder("desc")} style={{ marginLeft: "10px" }}>⬇️ Fiyat Azalan</button>
-
-      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
-        {filtered.map((product) => (
-          <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "230px", textAlign: "center" }}>
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        {favorites.map((product) => (
+          <div
+            key={product.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "10px",
+              width: "250px",
+              textAlign: "center",
+            }}
+          >
             <img src={product.image} alt={product.name} width="100" height="100" />
             <h3>{product.name}</h3>
             <p>${product.price}</p>
             <p>⭐ Score: {calculateScore(product.price)}</p>
-            {isClient && <PriceChart history={product.history} />}
-            <button onClick={() => toggleFavorite(product)}>
-              {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
+            <PriceChart history={product.history || [product.price]} />
+            <button onClick={() => handleRemove(product.id)}>
+              🗑️ Remove
             </button>
           </div>
         ))}
