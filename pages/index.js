@@ -7,7 +7,6 @@ import {
 } from "../utils/localStorage";
 import Link from "next/link";
 
-// Ürün listesi
 const products = [
   { id: 1, name: "Wireless Mouse", price: 19.99, image: "/mouse.jpg" },
   { id: 2, name: "Bluetooth Headphones", price: 39.99, image: "/hub.jpg" },
@@ -17,7 +16,7 @@ const products = [
 export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState(null); // "asc" veya "desc"
+  const [sortOrder, setSortOrder] = useState(null);
 
   useEffect(() => {
     setFavorites(getFavorites());
@@ -37,7 +36,6 @@ export default function Home() {
       <h1>All Products</h1>
       <Link href="/favorites">Go to Favorites ❤️</Link>
 
-      {/* Arama kutusu */}
       <input
         type="text"
         placeholder="Search products..."
@@ -53,7 +51,6 @@ export default function Home() {
         }}
       />
 
-      {/* Sıralama butonları */}
       <div style={{ marginBottom: "20px" }}>
         <button onClick={() => setSortOrder("asc")} style={{ marginRight: "10px" }}>
           Fiyat: Artan ⬆️
@@ -63,7 +60,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Ürün listesi */}
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
         {products
           .filter((product) =>
