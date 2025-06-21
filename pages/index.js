@@ -11,7 +11,7 @@ const products = [
     category: "Mouse",
     price: 19.99,
     image: "/images/wirelessmouse.png",
-    history: [22.99, 21.99, 20.99, 19.99],
+    history: [24, 22, 21, 19.99],
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const products = [
     category: "Laptop",
     price: 39.99,
     image: "/images/laptop.png",
-    history: [45, 42, 40, 39.99],
+    history: [45, 42, 41, 39.99],
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const products = [
     category: "Keyboard",
     price: 29.99,
     image: "/images/keyboard.jpg",
-    history: [32, 31, 30, 29.99],
+    history: [34, 32, 30, 29.99],
   },
 ];
 
@@ -36,6 +36,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [alerts, setAlerts] = useState({});
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -52,10 +53,11 @@ export default function Home() {
     setFavorites(getFavorites());
   };
 
-  const filteredProducts = products
-    .filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategory === "All" || product.category === selectedCategory)
+  const filtered = products
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (selectedCategory === "All" || product.category === selectedCategory)
     )
     .sort((a, b) => {
       if (sortOrder === "asc") return a.price - b.price;
@@ -69,49 +71,54 @@ export default function Home() {
       <Link href="/favorites">Go to Favorites ❤️</Link>
       <br /><br />
 
-      {/* Arama kutusu */}
       <input
         type="text"
         placeholder="Search products..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ padding: "5px", marginBottom: "10px" }}
+        style={{ padding: "5px", width: "250px" }}
       />
 
-      {/* Kategori filtre butonları */}
-      <div style={{ marginBottom: "10px" }}>
+      <div style={{ marginTop: "10px" }}>
         <button onClick={() => setSelectedCategory("All")}>All</button>
         <button onClick={() => setSelectedCategory("Mouse")}>Mouse</button>
         <button onClick={() => setSelectedCategory("Laptop")}>Laptop</button>
         <button onClick={() => setSelectedCategory("Keyboard")}>Keyboard</button>
       </div>
 
-      {/* Sıralama butonları */}
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginTop: "10px" }}>
         <button onClick={() => setSortOrder("asc")}>⬆️ Fiyat Artan</button>
         <button onClick={() => setSortOrder("desc")} style={{ marginLeft: "10px" }}>
           ⬇️ Fiyat Azalan
         </button>
       </div>
 
-      {/* Ürün listesi */}
-      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              width: "250px",
-              textAlign: "center",
-            }}
-          >
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "20px" }}>
+        {filtered.map((product) => (
+          <div key={product.id} style={{ border: "1px solid #ccc", padding: "10px", width: "250px", textAlign: "center" }}>
             <img src={product.image} alt={product.name} width="100" />
             <h3>{product.name}</h3>
             <p>${product.price}</p>
             <p>⭐ Score: {calculateScore(product.price)}</p>
             {isClient && <PriceChart history={product.history} />}
-            <button onClick={() => toggleFavorite(product)}>
+
+            {/* 🔔 Fiyat Alarmı Girişi */}
+            <input
+              type="number"
+              placeholder="Alert below $"
+              value={alerts[product.id] || ""}
+              onChange={(e) =>
+                setAlerts({ ...alerts, [product.id]: e.target.value })
+              }
+              style={{ marginTop: "8px", width: "90%", padding: "5px" }}
+            />
+            {alerts[product.id] && product.price < Number(alerts[product.id]) && (
+              <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>
+                🚨 Price dropped below your alert!
+              </p>
+            )}
+
+            <button onClick={() => toggleFavorite(product)} style={{ marginTop: "10px" }}>
               {isFavorite(product.id) ? "💔 Remove" : "🤍 Add to Favorites"}
             </button>
           </div>
