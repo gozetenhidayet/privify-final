@@ -1,12 +1,3 @@
-
-1 of 3
-Gir
-Inbox
-
-Hidayet Gozeten <hynngozeten@gmail.com>
-9:15 PM (0 minutes ago)
-to me
-
 import { useState, useEffect } from "react";
 import {
   getFavorites,
